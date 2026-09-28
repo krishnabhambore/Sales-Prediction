@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sales Prediction using Python</title>
+<style>
+:root{--bg:#F7F6F2;--card:#fff;--ink:#1B1B2F;--mute:#5E6072;--line:#E1DFD6;--tv:#E8912D;--radio:#178F7B;--news:#8C90A3;--base:#CFCBE0;--brand:#4B2E8F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15151F;--card:#1E1E2B;--ink:#F0EFF7;--mute:#A4A6B8;--line:#33344A;--tv:#F2A652;--radio:#34C2A9;--news:#8C90A3;--base:#4A4570;--brand:#A98BFF}}
+:root[data-theme="dark"]{--bg:#15151F;--card:#1E1E2B;--ink:#F0EFF7;--mute:#A4A6B8;--line:#33344A;--tv:#F2A652;--radio:#34C2A9;--news:#8C90A3;--base:#4A4570;--brand:#A98BFF}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}
+main{max-width:920px;margin:0 auto;padding:40px 20px 64px}
+h1,h2{font-family:"Bricolage Grotesque",Inter,system-ui,sans-serif;line-height:1.1;margin:0}
+h1{font-size:clamp(2rem,6vw,3.4rem);letter-spacing:-.02em;max-width:16em}
+h2{font-size:1.5rem;margin-bottom:12px}
+p{margin:0 0 12px;max-width:62ch}
+.lead{color:var(--mute);font-size:1.08rem;margin-top:16px}
+section{margin-top:56px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px}
+.tool{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;margin-top:28px}
+@media(max-width:720px){.tool{grid-template-columns:1fr}}
+.ctl{margin-bottom:20px}
+.ctl label{display:flex;justify-content:space-between;font-weight:600;margin-bottom:6px}
+.ctl output{font-variant-numeric:tabular-nums;color:var(--mute);font-weight:500}
+input[type=range]{width:100%;height:28px;accent-color:var(--brand)}
+#tv{accent-color:var(--tv)}#radio{accent-color:var(--radio)}#news{accent-color:var(--news)}
+input:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.big{font-family:"Bricolage Grotesque",Inter,sans-serif;font-size:4rem;font-weight:700;line-height:1;letter-spacing:-.03em}
+.unit{color:var(--mute);margin:4px 0 20px}
+.stack{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--line)}
+.stack span{display:block;transition:width .2s}
+.legend{list-style:none;padding:0;margin:14px 0 0;font-size:.92rem}
+.legend li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid var(--line)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
+.note{font-size:.85rem;color:var(--mute);margin-top:14px}
+.bars{display:grid;gap:12px}
+.row{display:grid;grid-template-columns:150px 1fr 56px;align-items:center;gap:12px}
+.row .track{height:14px;background:var(--line);border-radius:7px;overflow:hidden}
+.row .fill{height:100%;border-radius:7px}
+.row b{text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:520px){.row{grid-template-columns:110px 1fr 48px}}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:460px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{color:var(--mute);font-weight:600;font-size:.9rem}
+td:not(:first-child),th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+tr.best td{font-weight:700;color:var(--brand)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+ol{padding-left:20px;margin:0}ol li{margin-bottom:8px}
+footer{margin-top:56px;color:var(--mute);font-size:.9rem}
+code{background:var(--line);padding:2px 6px;border-radius:5px;font-size:.88em}
+</style>
+</head>
+<body>
+<main>
+<h1>Which ad spend actually moves sales?</h1>
+<p class="lead">A machine learning project in Python that predicts product sales from TV, radio and newspaper advertising budgets. Try the sliders to see how each channel contributes.</p>
+
+<div class="tool card" aria-label="Sales predictor">
+  <div>
+    <div class="ctl"><label for="tv">TV budget <output id="tvo"></output></label><input id="tv" type="range" min="0" max="300" step="1" value="150"></div>
+    <div class="ctl"><label for="radio">Radio budget <output id="radioo"></output></label><input id="radio" type="range" min="0" max="50" step="0.5" value="25"></div>
+    <div class="ctl"><label for="news">Newspaper budget <output id="newso"></output></label><input id="news" type="range" min="0" max="115" step="1" value="30"></div>
+    <p class="note">Budgets in $ thousands. Move Newspaper all the way up and watch how little the result changes.</p>
+  </div>
+  <div>
+    <div class="big" id="pred" aria-live="polite">0</div>
+    <div class="unit">predicted sales (thousand units)</div>
+    <div class="stack" id="stack"></div>
+    <ul class="legend" id="legend"></ul>
+    <p class="note">This live estimate uses the linear regression coefficients from the project. The full Gradient Boosting model is more accurate (R² 0.98 vs 0.90).</p>
+  </div>
+</div>
+
+<section>
+<h2>What the data says</h2>
+<div class="grid2">
+  <div class="card">
+    <p><b>TV and radio drive sales.</b> TV has the strongest link to sales (correlation 0.78), followed by radio (0.58).</p>
+    <p><b>Newspaper adds almost nothing.</b> Once TV and radio are accounted for, newspaper spend has close to zero effect.</p>
+    <p style="margin:0"><b>The channels work together.</b> Tree-based models beat linear regression by a wide margin, so the effect of one channel depends on the others.</p>
+  </div>
+  <div class="card">
+    <p style="font-weight:600;margin-bottom:14px">Feature importance (Random Forest)</p>
+    <div class="bars">
+      <div class="row"><span>TV</span><div class="track"><div class="fill" style="width:62.5%;background:var(--tv)"></div></div><b>0.63</b></div>
+      <div class="row"><span>Radio</span><div class="track"><div class="fill" style="width:36.2%;background:var(--radio)"></div></div><b>0.36</b></div>
+      <div class="row"><span>Newspaper</span><div class="track"><div class="fill" style="width:1.3%;background:var(--news)"></div></div><b>0.01</b></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section>
+<h2>Model comparison</h2>
+<div class="card wrap">
+<table>
+<thead><tr><th>Model</th><th>R² (test)</th><th>MAE</th><th>RMSE</th></tr></thead>
+<tbody>
+<tr><td>Linear Regression</td><td>0.899</td><td>1.46</td><td>1.78</td></tr>
+<tr><td>Random Forest</td><td>0.982</td><td>0.63</td><td>0.76</td></tr>
+<tr class="best"><td>Gradient Boosting</td><td>0.983</td><td>0.62</td><td>0.73</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section>
+<h2>How it was built</h2>
+<div class="card">
+<ol>
+<li>Loaded the public Advertising dataset: 200 rows, no missing values.</li>
+<li>Explored correlations and spend-vs-sales relationships.</li>
+<li>Split the data 80/20 into training and test sets.</li>
+<li>Trained Linear Regression, Random Forest and Gradient Boosting.</li>
+<li>Compared them with R², MAE, RMSE and 5-fold cross-validation.</li>
+<li>Used the best model to predict sales for new budgets.</li>
+</ol>
+</div>
+</section>
+
+<footer>Built with Python, pandas, scikit-learn, matplotlib and seaborn. Source: <code>sales_prediction.py</code></footer>
+</main>
+<script>
+(function(){
+var C={tv:0.0447,radio:0.1892,news:0.0028,base:2.9791};
+var ids=['tv','radio','news'],el={};
+ids.forEach(function(i){el[i]=document.getElementById(i)});
+var parts=[['Baseline','base','--base'],['TV','tv','--tv'],['Radio','radio','--radio'],['Newspaper','news','--news']];
+function fmt(n){return n.toFixed(2)}
+function update(){
+  var v={tv:+el.tv.value,radio:+el.radio.value,news:+el.news.value};
+  document.getElementById('tvo').textContent='$'+v.tv+'k';
+  document.getElementById('radioo').textContent='$'+v.radio+'k';
+  document.getElementById('newso').textContent='$'+v.news+'k';
+  var c={base:C.base,tv:v.tv*C.tv,radio:v.radio*C.radio,news:v.news*C.news};
+  var total=c.base+c.tv+c.radio+c.news;
+  document.getElementById('pred').textContent=fmt(total);
+  var s='',l='';
+  parts.forEach(function(p){
+    s+='<span style="width:'+(c[p[1]]/total*100)+'%;background:var('+p[2]+')"></span>';
+    l+='<li><span><i class="dot" style="background:var('+p[2]+')"></i>'+p[0]+'</span><b>'+fmt(c[p[1]])+'</b></li>';
+  });
+  document.getElementById('stack').innerHTML=s;
+  document.getElementById('legend').innerHTML=l;
+}
+ids.forEach(function(i){el[i].addEventListener('input',update)});
+update();
+})();
+</script>
+</body>
+</html>
